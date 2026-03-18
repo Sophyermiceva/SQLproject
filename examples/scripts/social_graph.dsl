@@ -1,7 +1,7 @@
 LOAD users;
 LOAD friendships;
 
-NODE Person KEY id FROM users;
+NODE Person KEY id NAME name FROM users;
 
 EDGE FriendOf
     FROM friendships

@@ -1,0 +1,19 @@
+digraph DSLGraph {
+  rankdir="LR";
+  graph [pad="0.3", nodesep="0.8", ranksep="1.0"];
+  node [shape="ellipse", style="filled", fillcolor="#f7f7f7", color="#555555"];
+  edge [color="#666666"];
+  "1" [label="Alice\n(1)", tooltip="User"];
+  "2" [label="Bob\n(2)", tooltip="User"];
+  "3" [label="Carol\n(3)", tooltip="User"];
+  "4" [label="David\n(4)", tooltip="User"];
+  "P1" [label="Bread\n(P1)", tooltip="Product"];
+  "P2" [label="Milk\n(P2)", tooltip="Product"];
+  "P3" [label="Cookiesss\n(P3)", tooltip="Product"];
+  "1" -> "P1" [label="Bought\nw=2.0"];
+  "1" -> "P2" [label="Bought\nw=1.0"];
+  "2" -> "P1" [label="Bought\nw=5.0"];
+  "3" -> "P3" [label="Bought\nw=3.0"];
+  "4" -> "P2" [label="Bought\nw=1.0"];
+  "2" -> "P3" [label="Bought\nw=2.0"];
+}

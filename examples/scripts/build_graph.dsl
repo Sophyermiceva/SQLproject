@@ -1,13 +1,12 @@
 LOAD users;
 LOAD orders;
+LOAD products;
 
-NODE User KEY id FROM users;
-
-NODE Product KEY product_id FROM orders;
+NODE User KEY user_id NAME name FROM users;
+NODE Product KEY id NAME name FROM products;
 
 EDGE Bought
     FROM orders
     SOURCE user_id
     TARGET product_id
-    WEIGHT amount
-    WHERE (amount > 5) AND (amount < 10);
+    WEIGHT amount;

@@ -8,21 +8,53 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 
-@dataclass
+@dataclass(frozen=True)
+class IdentifierValue:
+    value: str
+
+
+@dataclass(frozen=True)
+class NumberValue:
+    value: float
+
+
+Value = Union[IdentifierValue, NumberValue]
+
+
+@dataclass(frozen=True)
+class ComparisonExpression:
+    field: str
+    operator: str
+    value: Value
+
+
+@dataclass(frozen=True)
+class LogicalExpression:
+    operator: str
+    left: "Expression"
+    right: "Expression"
+
+
+Expression = Union[ComparisonExpression, LogicalExpression]
+
+
+@dataclass(frozen=True)
 class LoadStatement:
     """LOAD <table_name>;"""
     table_name: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class NodeStatement:
-    """NODE <label> KEY <key_field> FROM <table_name>;"""
+    """NODE <label> KEY <key_field> [NAME <name_field>] FROM <table_name>;"""
     label: str
     key_field: str
     table_name: str
+    name_field: Optional[str] = None
+    where: Optional[Expression] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class EdgeStatement:
     """
     EDGE <label>
@@ -36,6 +68,7 @@ class EdgeStatement:
     source_field: str
     target_field: str
     weight_field: Optional[str] = None
+    where: Optional[Expression] = None
 
 
 # Union type for any top-level statement.

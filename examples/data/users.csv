@@ -1,4 +1,4 @@
-id,name,city
+user_id,name,city
 1,Alice,Prague
 2,Bob,Berlin
 3,Carol,London

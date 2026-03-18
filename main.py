@@ -15,6 +15,7 @@ from dsl.lexer import Lexer
 from dsl.parser import Parser
 from dsl.interpreter import Interpreter
 from dsl.errors import DSLError
+from graph.graphviz_backend import GraphvizTranspiler
 from graph.visualizer import visualize
 
 
@@ -30,6 +31,12 @@ def main() -> None:
         "--output", "-o",
         default=None,
         help="Save graph image to this file instead of showing it",
+    )
+    ap.add_argument(
+        "--backend",
+        choices=["networkx", "graphviz"],
+        default="networkx",
+        help="Choose whether to build and render the graph or transpile it to Graphviz DOT",
     )
     args = ap.parse_args()
 
@@ -49,15 +56,19 @@ def main() -> None:
         # 2. Parse
         ast = Parser(tokens).parse()
 
-        # 3. Interpret
-        interpreter = Interpreter(data_dir=data_dir)
-        builder = interpreter.run(ast)
-
-        # 4. Output
-        print(builder.summary())
-
-        # 5. Visualize
-        visualize(builder.graph, output_path=args.output)
+        if args.backend == "graphviz":
+            transpiler = GraphvizTranspiler(data_dir=data_dir)
+            dot_output = transpiler.run(ast)
+            if args.output:
+                Path(args.output).write_text(dot_output, encoding="utf-8")
+                print(f"Graphviz DOT saved to {args.output}")
+            else:
+                print(dot_output)
+        else:
+            interpreter = Interpreter(data_dir=data_dir)
+            builder = interpreter.run(ast)
+            print(builder.summary())
+            visualize(builder.graph, output_path=args.output)
 
     except DSLError as exc:
         print(f"DSL Error: {exc}", file=sys.stderr)

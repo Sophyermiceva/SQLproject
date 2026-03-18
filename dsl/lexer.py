@@ -53,6 +53,33 @@ class Lexer:
         token_type = KEYWORDS.get(word.upper(), TokenType.IDENTIFIER)
         return Token(type=token_type, value=word, line=start_line, col=start_col)
 
+    def _read_number(self) -> Token:
+        """Read an integer or decimal numeric literal."""
+        start_col = self.col
+        start_line = self.line
+        chars: List[str] = []
+        seen_dot = False
+
+        while self._current() is not None:
+            ch = self._current()
+            if ch.isdigit():
+                chars.append(ch)
+                self._advance()
+                continue
+            if ch == "." and not seen_dot:
+                seen_dot = True
+                chars.append(ch)
+                self._advance()
+                continue
+            break
+
+        return Token(
+            type=TokenType.NUMBER,
+            value="".join(chars),
+            line=start_line,
+            col=start_col,
+        )
+
     def tokenize(self) -> List[Token]:
         """Scan the entire source and return a list of tokens."""
         while True:
@@ -72,8 +99,44 @@ class Lexer:
                 self._advance()
                 continue
 
+            if ch == "(":
+                self.tokens.append(Token(TokenType.LPAREN, "(", self.line, self.col))
+                self._advance()
+                continue
+
+            if ch == ")":
+                self.tokens.append(Token(TokenType.RPAREN, ")", self.line, self.col))
+                self._advance()
+                continue
+
+            if ch == ">":
+                line = self.line
+                col = self.col
+                self._advance()
+                if self._current() == "=":
+                    self.tokens.append(Token(TokenType.GREATER_EQUAL, ">=", line, col))
+                    self._advance()
+                else:
+                    self.tokens.append(Token(TokenType.GREATER, ">", line, col))
+                continue
+
+            if ch == "<":
+                line = self.line
+                col = self.col
+                self._advance()
+                if self._current() == "=":
+                    self.tokens.append(Token(TokenType.LESS_EQUAL, "<=", line, col))
+                    self._advance()
+                else:
+                    self.tokens.append(Token(TokenType.LESS, "<", line, col))
+                continue
+
             if ch.isalpha() or ch == "_":
                 self.tokens.append(self._read_identifier())
+                continue
+
+            if ch.isdigit():
+                self.tokens.append(self._read_number())
                 continue
 
             raise LexerError(ch, self.line, self.col)

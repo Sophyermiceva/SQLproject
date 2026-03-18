@@ -1,6 +1,6 @@
 """Graph builder — wraps networkx to construct a directed graph."""
 
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict
 
 import networkx as nx
 
@@ -14,7 +14,13 @@ class GraphBuilder:
     def __init__(self):
         self.graph = nx.DiGraph()
 
-    def add_nodes(self, label: str, key_field: str, table: Table) -> None:
+    def add_nodes(
+        self,
+        label: str,
+        key_field: str,
+        table: Table,
+        name_field: Optional[str] = None,
+    ) -> None:
         """Create a graph node for each unique key value in the table.
 
         Each node receives attributes: label (entity type) and the full row data.
@@ -22,15 +28,27 @@ class GraphBuilder:
         if not table:
             return
 
-        if key_field not in table[0]:
+        columns = set(table[0].keys())
+        if key_field not in columns:
             raise InterpreterError(
                 f"Key field '{key_field}' not found in table columns: "
+                f"{list(table[0].keys())}"
+            )
+        if name_field and name_field not in columns:
+            raise InterpreterError(
+                f"Name field '{name_field}' not found in table columns: "
                 f"{list(table[0].keys())}"
             )
 
         for row in table:
             node_id = row[key_field]
-            self.graph.add_node(node_id, label=label, **row)
+            display_name = row[name_field] if name_field else str(node_id)
+            self.graph.add_node(
+                node_id,
+                label=label,
+                display_name=display_name,
+                **row,
+            )
 
     def add_edges(
         self,
@@ -81,7 +99,11 @@ class GraphBuilder:
             "Nodes:",
         ]
         for node, data in self.graph.nodes(data=True):
-            lines.append(f"  [{data.get('label', '?')}] {node}")
+            display_name = data.get("display_name", str(node))
+            if display_name == str(node):
+                lines.append(f"  [{data.get('label', '?')}] {display_name}")
+            else:
+                lines.append(f"  [{data.get('label', '?')}] {display_name} ({node})")
 
         lines.append("")
         lines.append("Edges:")

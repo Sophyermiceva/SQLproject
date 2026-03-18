@@ -11,9 +11,9 @@ which fields serve as keys, and which relationships become edges.
 ## Architecture
 
 ```
-DSL script  →  Lexer  →  Tokens  →  Parser  →  AST  →  Interpreter  →  Graph
-                                                              ↑
-                                                         CSV Loader
+DSL script  →  Lexer  →  Tokens  →  Parser  →  AST  →  Backend
+                                                           ↑
+                                                      CSV Loader
 ```
 
 | Component          | File                     | Responsibility                                |
@@ -22,7 +22,9 @@ DSL script  →  Lexer  →  Tokens  →  Parser  →  AST  →  Interpreter  �
 | Lexer              | `dsl/lexer.py`           | Scans source text into tokens                  |
 | AST nodes          | `dsl/ast_nodes.py`       | Data classes for LOAD, NODE, EDGE statements   |
 | Parser             | `dsl/parser.py`          | Recursive-descent parser producing an AST      |
-| Interpreter        | `dsl/interpreter.py`     | Walks the AST, loads data, builds the graph    |
+| Runtime            | `dsl/runtime.py`         | Shared AST execution and filtering logic       |
+| Interpreter        | `dsl/interpreter.py`     | Backend that builds the in-memory graph        |
+| Graphviz backend   | `graph/graphviz_backend.py` | Backend that emits Graphviz DOT syntax      |
 | Error classes      | `dsl/errors.py`          | Custom exceptions (LexerError, ParserError, …) |
 | CSV Loader         | `loader/csv_loader.py`   | Reads CSV files into row-dict lists            |
 | Graph Builder      | `graph/builder.py`       | Wraps networkx for node/edge construction      |
@@ -36,7 +38,7 @@ DSL script  →  Lexer  →  Tokens  →  Parser  →  AST  →  Interpreter  �
 
 LOAD <table_name>;
 
-NODE <Label> KEY <key_column> FROM <table_name>;
+NODE <Label> KEY <key_column> [NAME <name_column>] FROM <table_name>;
 
 EDGE <Label>
     FROM <table_name>
@@ -51,7 +53,7 @@ EDGE <Label>
 LOAD users;
 LOAD orders;
 
-NODE User KEY id FROM users;
+NODE User KEY id NAME name FROM users;
 NODE Product KEY product_id FROM orders;
 
 EDGE Bought
@@ -78,6 +80,9 @@ python main.py examples/scripts/build_graph.dsl --data-dir examples/data
 
 # Save graph image to file
 python main.py examples/scripts/build_graph.dsl --data-dir examples/data --output graph.png
+
+# Transpile to Graphviz DOT
+python main.py examples/scripts/build_graph.dsl --data-dir examples/data --backend graphviz --output graph.dot
 ```
 
 ### Command-line arguments
@@ -86,7 +91,8 @@ python main.py examples/scripts/build_graph.dsl --data-dir examples/data --outpu
 |---------------|----------|----------------------------------------------------|
 | `script`      | Yes      | Path to a `.dsl` script file                       |
 | `--data-dir`  | No       | Directory with CSV files (defaults to script's dir) |
-| `--output`    | No       | Save visualisation to this file instead of showing  |
+| `--output`    | No       | Save output to this file: image for `networkx`, DOT for `graphviz` |
+| `--backend`   | No       | `networkx` to render the graph, `graphviz` to emit DOT syntax |
 
 ## Running Tests
 

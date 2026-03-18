@@ -11,14 +11,25 @@ class TokenType(Enum):
     NODE = auto()
     EDGE = auto()
     KEY = auto()
+    NAME = auto()
     FROM = auto()
     SOURCE = auto()
     TARGET = auto()
     WEIGHT = auto()
+    WHERE = auto()
+    AND = auto()
+    OR = auto()
 
     # Literals / symbols
     IDENTIFIER = auto()
+    NUMBER = auto()
     SEMICOLON = auto()
+    LPAREN = auto()
+    RPAREN = auto()
+    GREATER = auto()
+    LESS = auto()
+    GREATER_EQUAL = auto()
+    LESS_EQUAL = auto()
 
     # Special
     EOF = auto()
@@ -30,10 +41,14 @@ KEYWORDS: Dict[str, TokenType] = {
     "NODE": TokenType.NODE,
     "EDGE": TokenType.EDGE,
     "KEY": TokenType.KEY,
+    "NAME": TokenType.NAME,
     "FROM": TokenType.FROM,
     "SOURCE": TokenType.SOURCE,
     "TARGET": TokenType.TARGET,
     "WEIGHT": TokenType.WEIGHT,
+    "WHERE": TokenType.WHERE,
+    "AND": TokenType.AND,
+    "OR": TokenType.OR,
 }
 
 
