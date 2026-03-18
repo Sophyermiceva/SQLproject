@@ -8,6 +8,11 @@ from dsl.runtime import ProgramRunner
 from loader.csv_loader import Table
 
 
+NodeAttributes = Dict[str, str]
+EdgeAttributes = Dict[str, object]
+EdgeRecord = Tuple[str, str, EdgeAttributes]
+
+
 class GraphvizTranspiler(ProgramRunner[str]):
     """Transpile the DSL program into Graphviz DOT syntax."""
 
@@ -15,8 +20,8 @@ class GraphvizTranspiler(ProgramRunner[str]):
 
     def __init__(self, data_dir: str = "."):
         super().__init__(data_dir=data_dir)
-        self.nodes: Dict[str, Dict[str, str]] = {}
-        self.edges: List[Tuple[str, str, Dict[str, object]]] = []
+        self.nodes: Dict[str, NodeAttributes] = {}
+        self.edges: List[EdgeRecord] = []
 
     def _handle_node(self, stmt: NodeStatement, table: Table) -> None:
         if not table:
@@ -61,7 +66,7 @@ class GraphvizTranspiler(ProgramRunner[str]):
         for row in table:
             source = row[stmt.source_field]
             target = row[stmt.target_field]
-            attrs: Dict[str, object] = {"label": stmt.label}
+            attrs: EdgeAttributes = {"label": stmt.label}
             if stmt.weight_field:
                 weight_raw = row[stmt.weight_field]
                 try:

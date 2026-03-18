@@ -1,0 +1,7 @@
+order_id,user_id,product_id,amount,status
+101,1,P1,2,paid
+102,1,P2,1,pending
+103,2,P1,5,paid
+104,3,P3,3,paid
+105,4,P2,1,cancelled
+106,2,P3,2,paid

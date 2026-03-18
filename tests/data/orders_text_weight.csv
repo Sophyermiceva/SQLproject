@@ -1,0 +1,4 @@
+order_id,user_id,product_id,amount
+201,1,P1,low
+202,2,P2,medium
+203,3,P3,high

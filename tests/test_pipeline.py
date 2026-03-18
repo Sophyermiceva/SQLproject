@@ -21,7 +21,7 @@ from graph.graphviz_backend import GraphvizTranspiler
 from graph.visualizer import _connected_subgraph, _layout_positions
 
 
-EXAMPLES_DATA = Path(__file__).resolve().parent.parent / "examples" / "data"
+TEST_DATA = Path(__file__).resolve().parent / "data"
 
 
 class TestLexer(unittest.TestCase):
@@ -188,7 +188,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         builder = interpreter.run(ast)
 
         g = builder.graph
@@ -206,7 +206,7 @@ class TestInterpreter(unittest.TestCase):
         src = "NODE User KEY id FROM nonexistent;"
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         with self.assertRaises(InterpreterError):
             interpreter.run(ast)
 
@@ -217,7 +217,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         with self.assertRaises(InterpreterError):
             interpreter.run(ast)
 
@@ -229,7 +229,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         builder = interpreter.run(ast)
 
         g = builder.graph
@@ -243,7 +243,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         builder = interpreter.run(ast)
 
         g = builder.graph
@@ -257,7 +257,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         builder = interpreter.run(ast)
 
         g = builder.graph
@@ -270,7 +270,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         with self.assertRaises(InterpreterError):
             interpreter.run(ast)
 
@@ -281,7 +281,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         with self.assertRaises(InterpreterError):
             interpreter.run(ast)
 
@@ -292,7 +292,7 @@ class TestInterpreter(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         builder = interpreter.run(ast)
 
         self.assertIn("[User] Alice (1)", builder.summary())
@@ -310,7 +310,7 @@ class TestVisualizer(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         builder = interpreter.run(ast)
 
         visible_graph = _connected_subgraph(builder.graph)
@@ -328,7 +328,7 @@ class TestVisualizer(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        interpreter = Interpreter(data_dir=EXAMPLES_DATA)
+        interpreter = Interpreter(data_dir=TEST_DATA)
         builder = interpreter.run(ast)
 
         visible_graph = _connected_subgraph(builder.graph)
@@ -360,7 +360,7 @@ class TestGraphvizBackend(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        transpiler = GraphvizTranspiler(data_dir=EXAMPLES_DATA)
+        transpiler = GraphvizTranspiler(data_dir=TEST_DATA)
 
         dot = transpiler.run(ast)
 
@@ -377,10 +377,38 @@ class TestGraphvizBackend(unittest.TestCase):
         """
         tokens = Lexer(src).tokenize()
         ast = Parser(tokens).parse()
-        transpiler = GraphvizTranspiler(data_dir=EXAMPLES_DATA)
+        transpiler = GraphvizTranspiler(data_dir=TEST_DATA)
 
         with self.assertRaises(InterpreterError):
             transpiler.run(ast)
+
+
+class TestAdditionalFixtures(unittest.TestCase):
+
+    def test_non_numeric_weight_is_preserved(self):
+        src = """
+        LOAD orders_text_weight;
+        EDGE Severity FROM orders_text_weight SOURCE user_id TARGET product_id WEIGHT amount;
+        """
+        tokens = Lexer(src).tokenize()
+        ast = Parser(tokens).parse()
+        interpreter = Interpreter(data_dir=TEST_DATA)
+        builder = interpreter.run(ast)
+
+        self.assertEqual(builder.graph["1"]["P1"]["weight"], "low")
+
+    def test_isolated_nodes_are_removed_from_visible_subgraph(self):
+        src = """
+        LOAD isolated_users;
+        NODE User KEY id NAME name FROM isolated_users;
+        """
+        tokens = Lexer(src).tokenize()
+        ast = Parser(tokens).parse()
+        interpreter = Interpreter(data_dir=TEST_DATA)
+        builder = interpreter.run(ast)
+
+        visible_graph = _connected_subgraph(builder.graph)
+        self.assertEqual(visible_graph.number_of_nodes(), 0)
 
 
 if __name__ == "__main__":

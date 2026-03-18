@@ -1,17 +1,20 @@
 """Graph builder — wraps networkx to construct a directed graph."""
 
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 import networkx as nx
 
 from dsl.errors import InterpreterError
-from loader.csv_loader import Table
+from loader.csv_loader import Row, Table
+
+
+EdgeAttributes = Dict[str, object]
 
 
 class GraphBuilder:
     """Incrementally builds a networkx DiGraph from interpreted DSL commands."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.graph = nx.DiGraph()
 
     def add_nodes(
@@ -80,7 +83,7 @@ class GraphBuilder:
         for row in table:
             src = row[source_field]
             tgt = row[target_field]
-            attrs: Dict = {"label": label}
+            attrs: EdgeAttributes = {"label": label}
 
             if weight_field:
                 try:

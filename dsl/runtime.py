@@ -1,10 +1,9 @@
 """Shared AST execution logic for swappable graph backends."""
 
 from pathlib import Path
-from typing import Dict, Generic, List, TypeVar, Union
+from typing import Dict, Generic, List, Optional, TypeVar, Union
 
 from dsl.ast_nodes import (
-    ComparisonExpression,
     EdgeStatement,
     Expression,
     IdentifierValue,
@@ -15,7 +14,7 @@ from dsl.ast_nodes import (
     Statement,
 )
 from dsl.errors import InterpreterError
-from loader.csv_loader import Table, load_csv
+from loader.csv_loader import Row, Table, load_csv
 
 
 BackendResult = TypeVar("BackendResult")
@@ -50,12 +49,14 @@ class ProgramRunner(Generic[BackendResult]):
         except (TypeError, ValueError):
             return None
 
-    def _resolve_compare_value(self, expr_value: Union[IdentifierValue, NumberValue]) -> object:
+    def _resolve_compare_value(
+        self, expr_value: Union[IdentifierValue, NumberValue]
+    ) -> Union[str, float]:
         if isinstance(expr_value, NumberValue):
             return expr_value.value
         return expr_value.value
 
-    def _evaluate_expression(self, expr: Expression, row: Dict[str, str]) -> bool:
+    def _evaluate_expression(self, expr: Expression, row: Row) -> bool:
         if isinstance(expr, LogicalExpression):
             left = self._evaluate_expression(expr.left, row)
             if expr.operator == "AND":
@@ -88,7 +89,7 @@ class ProgramRunner(Generic[BackendResult]):
 
         raise InterpreterError(f"Unsupported operator '{expr.operator}'")
 
-    def _filter_table(self, table: Table, where: Union[Expression, None]) -> Table:
+    def _filter_table(self, table: Table, where: Optional[Expression]) -> Table:
         if where is None:
             return table
         return [row for row in table if self._evaluate_expression(where, row)]

@@ -11,7 +11,8 @@ from typing import Dict, List, Union
 from dsl.errors import InterpreterError
 
 # Each table is represented as a list of row-dicts.
-Table = List[Dict[str, str]]
+Row = Dict[str, str]
+Table = List[Row]
 
 
 def load_csv(file_path: Union[str, Path]) -> Table:

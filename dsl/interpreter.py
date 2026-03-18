@@ -1,10 +1,9 @@
 """Interpreter backend that executes the AST into an in-memory graph."""
 
-from typing import List
-
-from dsl.ast_nodes import EdgeStatement, NodeStatement, Statement
+from dsl.ast_nodes import EdgeStatement, NodeStatement
 from dsl.runtime import ProgramRunner
 from graph.builder import GraphBuilder
+from loader.csv_loader import Table
 
 
 class Interpreter(ProgramRunner[GraphBuilder]):
@@ -16,7 +15,7 @@ class Interpreter(ProgramRunner[GraphBuilder]):
         super().__init__(data_dir=data_dir)
         self.builder = GraphBuilder()
 
-    def _handle_node(self, stmt: NodeStatement, filtered_table: List[dict]) -> None:
+    def _handle_node(self, stmt: NodeStatement, filtered_table: Table) -> None:
         self.builder.add_nodes(
             stmt.label,
             stmt.key_field,
@@ -24,7 +23,7 @@ class Interpreter(ProgramRunner[GraphBuilder]):
             name_field=stmt.name_field,
         )
 
-    def _handle_edge(self, stmt: EdgeStatement, filtered_table: List[dict]) -> None:
+    def _handle_edge(self, stmt: EdgeStatement, filtered_table: Table) -> None:
         self.builder.add_edges(
             label=stmt.label,
             table=filtered_table,

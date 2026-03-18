@@ -1,7 +1,7 @@
 """Graph visualizer using matplotlib and networkx."""
 
 import math
-from typing import Optional, Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -12,6 +12,10 @@ _PALETTE = [
     "#4e79a7", "#f28e2b", "#e15759", "#76b7b2",
     "#59a14f", "#edc948", "#b07aa1", "#ff9da7",
 ]
+
+
+EdgeKey = Tuple[str, str]
+Position = Tuple[float, float]
 
 
 def visualize(graph: nx.DiGraph, output_path: Optional[str] = None) -> None:
@@ -64,7 +68,7 @@ def visualize(graph: nx.DiGraph, output_path: Optional[str] = None) -> None:
     )
 
     # Build edge labels from relationship name and optional weight.
-    edge_labels: Dict[Tuple, str] = {}
+    edge_labels: Dict[EdgeKey, str] = {}
     for src, tgt, data in visible_graph.edges(data=True):
         parts = [data.get("label", "")]
         if "weight" in data:
@@ -108,12 +112,12 @@ def _connected_subgraph(graph: nx.DiGraph) -> nx.DiGraph:
     return graph.subgraph(connected_nodes).copy()
 
 
-def _layout_positions(graph: nx.DiGraph) -> Dict[str, Tuple[float, float]]:
+def _layout_positions(graph: nx.DiGraph) -> Dict[str, Position]:
     """Compute a roomier deterministic layout so edges remain visible."""
     node_count = graph.number_of_nodes()
     if node_count == 1:
         only_node = next(iter(graph.nodes()))
-        return {only_node: (0.0, 0.0)}
+        return {str(only_node): (0.0, 0.0)}
 
     k = max(2.5, 3.2 / max(math.sqrt(node_count), 1.0))
     base_pos = nx.spring_layout(
@@ -133,8 +137,8 @@ def _layout_positions(graph: nx.DiGraph) -> Dict[str, Tuple[float, float]]:
 
 
 def _normalize_positions(
-    positions: Dict[str, Tuple[float, float]]
-) -> Dict[str, Tuple[float, float]]:
+    positions: Dict[str, Position]
+) -> Dict[str, Position]:
     """Rescale positions to fill the drawing frame without collapsing spacing."""
     xs = [coords[0] for coords in positions.values()]
     ys = [coords[1] for coords in positions.values()]
