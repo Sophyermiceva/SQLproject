@@ -1,6 +1,7 @@
 """Unit tests covering the full DSL pipeline: lexer → parser → interpreter."""
 
 import math
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -17,7 +18,8 @@ from dsl.lexer import Lexer
 from dsl.parser import Parser
 from dsl.interpreter import Interpreter
 from dsl.errors import LexerError, ParserError, InterpreterError
-from graph.graphviz_backend import GraphvizTranspiler
+from graph.bayesian_tree import BayesianTreeBuilder
+from graph.graphviz_backend import GraphvizTranspiler, render_dot, save_dot
 from graph.visualizer import _connected_subgraph, _layout_positions
 
 
@@ -53,6 +55,17 @@ class TestLexer(unittest.TestCase):
         tokens = Lexer("NODE User KEY id NAME name FROM users;").tokenize()
         types = [t.type.name for t in tokens]
         self.assertIn("NAME", types)
+
+    def test_bayesian_tokens(self):
+        tokens = Lexer(
+            "NODE Event KEY event_id NAME name PRIOR prior FROM events; "
+            "EDGE Causes FROM conditionals SOURCE parent TARGET child "
+            "PROBABILITY probability GIVEN parent_state;"
+        ).tokenize()
+        types = [t.type.name for t in tokens]
+        self.assertIn("PRIOR", types)
+        self.assertIn("PROBABILITY", types)
+        self.assertIn("GIVEN", types)
 
     def test_where_inclusive_tokens(self):
         tokens = Lexer("EDGE Bought FROM orders SOURCE user_id TARGET product_id WHERE amount >= 1 AND amount <= 5;").tokenize()
@@ -99,6 +112,12 @@ class TestParser(unittest.TestCase):
         self.assertIsInstance(stmts[0], NodeStatement)
         self.assertEqual(stmts[0].name_field, "name")
 
+    def test_node_with_prior_field(self):
+        stmts = self._parse("NODE Event KEY event_id NAME name PRIOR prior FROM events;")
+        self.assertEqual(len(stmts), 1)
+        self.assertIsInstance(stmts[0], NodeStatement)
+        self.assertEqual(stmts[0].prior_field, "prior")
+
     def test_edge_with_weight(self):
         src = "EDGE Bought FROM orders SOURCE uid TARGET pid WEIGHT amt;"
         stmts = self._parse(src)
@@ -112,6 +131,17 @@ class TestParser(unittest.TestCase):
         stmts = self._parse(src)
         edge = stmts[0]
         self.assertIsNone(edge.weight_field)
+
+    def test_edge_with_probability(self):
+        src = (
+            "EDGE Causes FROM conditionals SOURCE parent_event TARGET child_event "
+            "PROBABILITY probability GIVEN parent_state;"
+        )
+        stmts = self._parse(src)
+        edge = stmts[0]
+        self.assertIsInstance(edge, EdgeStatement)
+        self.assertEqual(edge.probability_field, "probability")
+        self.assertEqual(edge.given_field, "parent_state")
 
     def test_multiple_statements(self):
         src = """
@@ -381,6 +411,76 @@ class TestGraphvizBackend(unittest.TestCase):
 
         with self.assertRaises(InterpreterError):
             transpiler.run(ast)
+
+    def test_graphviz_backend_writes_dot_and_renders_image(self):
+        src = """
+        LOAD users;
+        LOAD orders;
+        NODE User KEY id NAME name FROM users WHERE id <= 2;
+        EDGE Bought FROM orders SOURCE user_id TARGET product_id WEIGHT amount WHERE amount >= 5;
+        """
+        tokens = Lexer(src).tokenize()
+        ast = Parser(tokens).parse()
+        transpiler = GraphvizTranspiler(data_dir=TEST_DATA)
+        dot = transpiler.run(ast)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            dot_path = save_dot(dot, tmp_path / "graph.dot")
+            image_path = render_dot(dot, tmp_path / "graph.png", dot_path=dot_path)
+
+            self.assertEqual(dot_path.read_text(encoding="utf-8"), dot)
+            self.assertTrue(image_path.exists())
+            self.assertGreater(image_path.stat().st_size, 0)
+
+
+class TestBayesianTree(unittest.TestCase):
+
+    def test_bayesian_tree_computes_leaf_probabilities(self):
+        src = """
+        LOAD bayes_events;
+        LOAD bayes_conditionals;
+        NODE Event KEY event_id NAME name PRIOR prior FROM bayes_events;
+        EDGE Causes
+            FROM bayes_conditionals
+            SOURCE parent_event
+            TARGET child_event
+            PROBABILITY probability
+            GIVEN parent_state;
+        """
+        tokens = Lexer(src).tokenize()
+        ast = Parser(tokens).parse()
+        builder = BayesianTreeBuilder(data_dir=TEST_DATA)
+
+        result = builder.run(ast)
+
+        self.assertAlmostEqual(result.probabilities["Storm"], 0.10)
+        self.assertAlmostEqual(result.probabilities["Flood"], 0.115)
+        self.assertAlmostEqual(result.probabilities["CropLoss"], 0.1575)
+        self.assertAlmostEqual(result.probabilities["RoadClosed"], 0.22475)
+        self.assertAlmostEqual(result.leaf_probabilities["CropLoss"], 0.1575)
+        self.assertAlmostEqual(result.leaf_probabilities["ShelterOpened"], 0.357325)
+        self.assertIn('"Storm" [label="Storm\\nP=0.1000"]', result.to_dot())
+        self.assertIn('"RoadClosed" -> "ShelterOpened"', result.to_dot())
+
+    def test_bayesian_tree_requires_conditional_rows_for_true_and_false(self):
+        src = """
+        LOAD bayes_events;
+        LOAD bayes_conditionals_incomplete;
+        NODE Event KEY event_id NAME name PRIOR prior FROM bayes_events;
+        EDGE Causes
+            FROM bayes_conditionals_incomplete
+            SOURCE parent_event
+            TARGET child_event
+            PROBABILITY probability
+            GIVEN parent_state;
+        """
+        tokens = Lexer(src).tokenize()
+        ast = Parser(tokens).parse()
+        builder = BayesianTreeBuilder(data_dir=TEST_DATA)
+
+        with self.assertRaises(InterpreterError):
+            builder.run(ast)
 
 
 class TestAdditionalFixtures(unittest.TestCase):

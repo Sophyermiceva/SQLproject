@@ -46,11 +46,12 @@ class LoadStatement:
 
 @dataclass(frozen=True)
 class NodeStatement:
-    """NODE <label> KEY <key_field> [NAME <name_field>] FROM <table_name>;"""
+    """NODE <label> KEY <key_field> [NAME <name_field>] [PRIOR <prior_field>] FROM <table_name>;"""
     label: str
     key_field: str
     table_name: str
     name_field: Optional[str] = None
+    prior_field: Optional[str] = None
     where: Optional[Expression] = None
 
 
@@ -68,6 +69,8 @@ class EdgeStatement:
     source_field: str
     target_field: str
     weight_field: Optional[str] = None
+    probability_field: Optional[str] = None
+    given_field: Optional[str] = None
     where: Optional[Expression] = None
 
 

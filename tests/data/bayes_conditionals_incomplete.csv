@@ -1,0 +1,4 @@
+parent_event,child_event,parent_state,probability
+Storm,Flood,true,0.70
+Flood,CropLoss,true,0.60
+Flood,CropLoss,false,0.10

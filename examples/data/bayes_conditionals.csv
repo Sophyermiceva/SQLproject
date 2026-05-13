@@ -1,0 +1,9 @@
+parent_event,child_event,parent_state,probability
+Storm,Flood,true,0.70
+Storm,Flood,false,0.05
+Flood,CropLoss,true,0.60
+Flood,CropLoss,false,0.10
+Flood,RoadClosed,true,0.80
+Flood,RoadClosed,false,0.15
+RoadClosed,ShelterOpened,true,0.90
+RoadClosed,ShelterOpened,false,0.20

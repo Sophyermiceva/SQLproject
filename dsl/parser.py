@@ -18,6 +18,26 @@ from dsl.ast_nodes import (
 from dsl.errors import ParserError
 
 
+IDENTIFIER_TOKEN_TYPES = {
+    TokenType.IDENTIFIER,
+    TokenType.LOAD,
+    TokenType.NODE,
+    TokenType.EDGE,
+    TokenType.KEY,
+    TokenType.NAME,
+    TokenType.FROM,
+    TokenType.SOURCE,
+    TokenType.TARGET,
+    TokenType.WEIGHT,
+    TokenType.PRIOR,
+    TokenType.PROBABILITY,
+    TokenType.GIVEN,
+    TokenType.WHERE,
+    TokenType.AND,
+    TokenType.OR,
+}
+
+
 class Parser:
     """Parses a list of tokens into a list of AST statements."""
 
@@ -45,10 +65,7 @@ class Parser:
     def _expect_identifier(self) -> str:
         """Consume an IDENTIFIER token and return its value."""
         token = self._current()
-        if token.type not in {
-            TokenType.IDENTIFIER,
-            TokenType.NAME,
-        }:
+        if token.type not in IDENTIFIER_TOKEN_TYPES:
             raise ParserError(
                 f"Expected IDENTIFIER, got {token.type.name} ('{token.value}')",
                 line=token.line,
@@ -147,9 +164,13 @@ class Parser:
         self._expect(TokenType.KEY)
         key_field = self._expect_identifier()
         name_field: Optional[str] = None
+        prior_field: Optional[str] = None
         if self._peek_type() == TokenType.NAME:
             self._expect(TokenType.NAME)
             name_field = self._expect_identifier()
+        if self._peek_type() == TokenType.PRIOR:
+            self._expect(TokenType.PRIOR)
+            prior_field = self._expect_identifier()
         self._expect(TokenType.FROM)
         table_name = self._expect_identifier()
         where = self._parse_optional_where()
@@ -158,6 +179,7 @@ class Parser:
             label=label,
             key_field=key_field,
             name_field=name_field,
+            prior_field=prior_field,
             table_name=table_name,
             where=where,
         )
@@ -173,9 +195,16 @@ class Parser:
         target_field = self._expect_identifier()
 
         weight_field: Optional[str] = None
+        probability_field: Optional[str] = None
+        given_field: Optional[str] = None
         if self._peek_type() == TokenType.WEIGHT:
             self._expect(TokenType.WEIGHT)
             weight_field = self._expect_identifier()
+        elif self._peek_type() == TokenType.PROBABILITY:
+            self._expect(TokenType.PROBABILITY)
+            probability_field = self._expect_identifier()
+            self._expect(TokenType.GIVEN)
+            given_field = self._expect_identifier()
 
         where = self._parse_optional_where()
         self._expect(TokenType.SEMICOLON)
@@ -185,6 +214,8 @@ class Parser:
             source_field=source_field,
             target_field=target_field,
             weight_field=weight_field,
+            probability_field=probability_field,
+            given_field=given_field,
             where=where,
         )
 

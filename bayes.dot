@@ -1,0 +1,15 @@
+digraph BayesianTree {
+  rankdir="TB";
+  graph [pad="0.3", nodesep="0.6", ranksep="0.9"];
+  node [shape="box", style="rounded,filled", fillcolor="#f7fbff", color="#4a6a8a"];
+  edge [color="#51657a"];
+  "Storm" [label="Storm\nP=0.1000"];
+  "Flood" [label="Flood\nP=0.1150"];
+  "CropLoss" [label="CropLoss\nP=0.1575"];
+  "RoadClosed" [label="RoadClosed\nP=0.2248"];
+  "ShelterOpened" [label="ShelterOpened\nP=0.3573"];
+  "Storm" -> "Flood" [label="P(T|T)=0.70\nP(T|F)=0.05"];
+  "Flood" -> "CropLoss" [label="P(T|T)=0.60\nP(T|F)=0.10"];
+  "Flood" -> "RoadClosed" [label="P(T|T)=0.80\nP(T|F)=0.15"];
+  "RoadClosed" -> "ShelterOpened" [label="P(T|T)=0.90\nP(T|F)=0.20"];
+}

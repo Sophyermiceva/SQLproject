@@ -1,6 +1,9 @@
 """Graphviz DOT backend for the graph DSL."""
 
-from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+from graphviz import Source
 
 from dsl.ast_nodes import EdgeStatement, NodeStatement
 from dsl.errors import InterpreterError
@@ -24,6 +27,8 @@ class GraphvizTranspiler(ProgramRunner[str]):
         self.edges: List[EdgeRecord] = []
 
     def _handle_node(self, stmt: NodeStatement, table: Table) -> None:
+        if stmt.prior_field is not None:
+            raise InterpreterError("PRIOR is supported only by the bayes backend")
         if not table:
             return
 
@@ -48,6 +53,8 @@ class GraphvizTranspiler(ProgramRunner[str]):
             }
 
     def _handle_edge(self, stmt: EdgeStatement, table: Table) -> None:
+        if stmt.probability_field is not None or stmt.given_field is not None:
+            raise InterpreterError("PROBABILITY ... GIVEN is supported only by the bayes backend")
         if not table:
             return
 
@@ -123,3 +130,32 @@ class GraphvizTranspiler(ProgramRunner[str]):
 def _escape(value: str) -> str:
     """Escape string content for Graphviz double-quoted strings."""
     return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
+def save_dot(dot_source: str, output_path: Union[str, Path]) -> Path:
+    """Write DOT text to disk and return the path."""
+    dot_path = Path(output_path)
+    dot_path.write_text(dot_source, encoding="utf-8")
+    return dot_path
+
+
+def render_dot(
+    dot_source: str,
+    output_path: Union[str, Path],
+    dot_path: Optional[Union[str, Path]] = None,
+) -> Path:
+    """Render DOT to an output file, optionally using a saved DOT file as source."""
+    render_path = Path(output_path)
+    output_format = render_path.suffix.lstrip(".")
+    if not output_format:
+        raise InterpreterError(
+            f"Rendered graph output path '{render_path}' must include a file extension"
+        )
+
+    if dot_path is not None:
+        source = Source.from_file(dot_path, format=output_format)
+    else:
+        source = Source(dot_source, format=output_format)
+
+    source.render(outfile=str(render_path), cleanup=False)
+    return render_path

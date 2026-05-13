@@ -9,4 +9,5 @@ EDGE Bought
     FROM orders
     SOURCE user_id
     TARGET product_id
-    WEIGHT amount;
+    WEIGHT amount
+    WHERE (amount >= 2) AND (amount <= 5);

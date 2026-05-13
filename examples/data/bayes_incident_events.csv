@@ -1,0 +1,14 @@
+event_id,name,prior
+SevereStorm,Severe storm,0.18
+PowerOutage,Power outage,
+Flooding,Flooding,
+TransportDisruption,Transport disruption,
+BackupGeneratorFailure,Backup generator failure,
+ColdStorageLoss,Cold storage loss,
+WaterContamination,Water contamination,
+EvacuationOrder,Evacuation order,
+SupplyShortage,Supply shortage,
+StaffShortage,Staff shortage,
+HospitalDowntime,Hospital downtime,
+EmergencyProcurement,Emergency procurement,
+PatientDiversion,Patient diversion,

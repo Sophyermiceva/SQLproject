@@ -16,6 +16,9 @@ class TokenType(Enum):
     SOURCE = auto()
     TARGET = auto()
     WEIGHT = auto()
+    PRIOR = auto()
+    PROBABILITY = auto()
+    GIVEN = auto()
     WHERE = auto()
     AND = auto()
     OR = auto()
@@ -46,6 +49,9 @@ KEYWORDS: Dict[str, TokenType] = {
     "SOURCE": TokenType.SOURCE,
     "TARGET": TokenType.TARGET,
     "WEIGHT": TokenType.WEIGHT,
+    "PRIOR": TokenType.PRIOR,
+    "PROBABILITY": TokenType.PROBABILITY,
+    "GIVEN": TokenType.GIVEN,
     "WHERE": TokenType.WHERE,
     "AND": TokenType.AND,
     "OR": TokenType.OR,

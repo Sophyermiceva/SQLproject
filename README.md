@@ -25,6 +25,7 @@ DSL script  →  Lexer  →  Tokens  →  Parser  →  AST  →  Backend
 | Runtime            | `dsl/runtime.py`         | Shared AST execution and filtering logic       |
 | Interpreter        | `dsl/interpreter.py`     | Backend that builds the in-memory graph        |
 | Graphviz backend   | `graph/graphviz_backend.py` | Backend that emits Graphviz DOT syntax      |
+| Bayesian backend   | `graph/bayesian_tree.py` | Builds a Bayesian tree and propagates probabilities |
 | Error classes      | `dsl/errors.py`          | Custom exceptions (LexerError, ParserError, …) |
 | CSV Loader         | `loader/csv_loader.py`   | Reads CSV files into row-dict lists            |
 | Graph Builder      | `graph/builder.py`       | Wraps networkx for node/edge construction      |
@@ -47,6 +48,19 @@ EDGE <Label>
     [WEIGHT <weight_column>];
 ```
 
+For Bayesian trees:
+
+```text
+NODE Event KEY <event_id_column> NAME <name_column> PRIOR <prior_column> FROM <events_table>;
+
+EDGE Causes
+    FROM <conditionals_table>
+    SOURCE <parent_event_column>
+    TARGET <child_event_column>
+    PROBABILITY <probability_column>
+    GIVEN <parent_state_column>;
+```
+
 ### Example
 
 ```
@@ -63,6 +77,22 @@ EDGE Bought
     WEIGHT amount;
 ```
 
+### Bayesian Tree Example
+
+```text
+LOAD bayes_events;
+LOAD bayes_conditionals;
+
+NODE Event KEY event_id NAME name PRIOR prior FROM bayes_events;
+
+EDGE Causes
+    FROM bayes_conditionals
+    SOURCE parent_event
+    TARGET child_event
+    PROBABILITY probability
+    GIVEN parent_state;
+```
+
 ## Installation
 
 ```bash
@@ -70,7 +100,10 @@ cd graph_dsl
 pip install -r requirements.txt
 ```
 
-Dependencies: `networkx`, `matplotlib` (standard Python 3.9+).
+Dependencies: `networkx`, `matplotlib`, `graphviz` (standard Python 3.9+).
+
+The Graphviz backend also requires the Graphviz system binary (`dot`) to be
+installed and available on `PATH`.
 
 ## Usage
 
@@ -82,7 +115,13 @@ python main.py examples/scripts/build_graph.dsl --data-dir examples/data
 python main.py examples/scripts/build_graph.dsl --data-dir examples/data --output graph.png
 
 # Transpile to Graphviz DOT
-python main.py examples/scripts/build_graph.dsl --data-dir examples/data --backend graphviz --output graph.dot
+python main.py examples/scripts/build_graph.dsl --data-dir examples/data --backend graphviz --dot-output graph.dot
+
+# Save DOT and render a Graphviz image from it
+python main.py examples/scripts/build_graph.dsl --data-dir examples/data --backend graphviz --dot-output graph.dot --output graph.png
+
+# Evaluate and render a Bayesian tree
+python main.py examples/scripts/bayesian_tree.dsl --data-dir examples/data --backend bayes --dot-output bayes.dot --output bayes.png
 ```
 
 ### Command-line arguments
@@ -91,8 +130,9 @@ python main.py examples/scripts/build_graph.dsl --data-dir examples/data --backe
 |---------------|----------|----------------------------------------------------|
 | `script`      | Yes      | Path to a `.dsl` script file                       |
 | `--data-dir`  | No       | Directory with CSV files (defaults to script's dir) |
-| `--output`    | No       | Save output to this file: image for `networkx`, DOT for `graphviz` |
-| `--backend`   | No       | `networkx` to render the graph, `graphviz` to emit DOT syntax |
+| `--output`    | No       | Save the rendered graph image to this file |
+| `--dot-output`| No       | Save Graphviz DOT to this file when using the `graphviz` or `bayes` backend |
+| `--backend`   | No       | `networkx` to render with matplotlib, `graphviz` to emit DOT and render via Graphviz, `bayes` to evaluate and render a Bayesian tree |
 
 ## Running Tests
 
@@ -111,6 +151,8 @@ python -m unittest tests.test_pipeline -v
 
 - `examples/scripts/build_graph.dsl` — User-Product purchase graph with weighted edges
 - `examples/scripts/social_graph.dsl` — Social friendship graph
+- `examples/scripts/bayesian_tree.dsl` — Bayesian tree built from priors and conditional probabilities
+- `examples/scripts/bayesian_incident_tree.dsl` — Larger Bayesian tree for an incident-response scenario
 
 ## Possible Future Improvements
 

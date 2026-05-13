@@ -1,6 +1,7 @@
 """Interpreter backend that executes the AST into an in-memory graph."""
 
 from dsl.ast_nodes import EdgeStatement, NodeStatement
+from dsl.errors import InterpreterError
 from dsl.runtime import ProgramRunner
 from graph.builder import GraphBuilder
 from loader.csv_loader import Table
@@ -16,6 +17,8 @@ class Interpreter(ProgramRunner[GraphBuilder]):
         self.builder = GraphBuilder()
 
     def _handle_node(self, stmt: NodeStatement, filtered_table: Table) -> None:
+        if stmt.prior_field is not None:
+            raise InterpreterError("PRIOR is supported only by the bayes backend")
         self.builder.add_nodes(
             stmt.label,
             stmt.key_field,
@@ -24,6 +27,8 @@ class Interpreter(ProgramRunner[GraphBuilder]):
         )
 
     def _handle_edge(self, stmt: EdgeStatement, filtered_table: Table) -> None:
+        if stmt.probability_field is not None or stmt.given_field is not None:
+            raise InterpreterError("PROBABILITY ... GIVEN is supported only by the bayes backend")
         self.builder.add_edges(
             label=stmt.label,
             table=filtered_table,

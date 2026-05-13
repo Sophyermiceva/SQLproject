@@ -8,6 +8,8 @@ load_stmt       ::= "LOAD" identifier ";"
 
 node_stmt       ::= "NODE" identifier
                     "KEY" identifier
+                    [ "NAME" identifier ]
+                    [ "PRIOR" identifier ]
                     "FROM" identifier
                     ";"
 
@@ -15,11 +17,13 @@ edge_stmt       ::= "EDGE" identifier
                     "FROM" identifier
                     "SOURCE" identifier
                     "TARGET" identifier
-                    [ weight_clause ]
+                    [ weight_clause | probability_clause ]
                     [ where_clause ]
                     ";"
 
 weight_clause   ::= "WEIGHT" identifier
+
+probability_clause ::= "PROBABILITY" identifier "GIVEN" identifier
 
 where_clause    ::= "WHERE" condition
 

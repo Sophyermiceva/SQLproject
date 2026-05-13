@@ -1,0 +1,6 @@
+event_id,name,prior
+Storm,Storm,0.10
+Flood,Flood,
+CropLoss,CropLoss,
+RoadClosed,RoadClosed,
+ShelterOpened,ShelterOpened,

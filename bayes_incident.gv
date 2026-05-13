@@ -1,0 +1,31 @@
+digraph BayesianTree {
+  rankdir="TB";
+  graph [pad="0.3", nodesep="0.6", ranksep="0.9"];
+  node [shape="box", style="rounded,filled", fillcolor="#f7fbff", color="#4a6a8a"];
+  edge [color="#51657a"];
+  "SevereStorm" [label="Severe storm\nP=0.1800"];
+  "PowerOutage" [label="Power outage\nP=0.1826"];
+  "Flooding" [label="Flooding\nP=0.0966"];
+  "TransportDisruption" [label="Transport disruption\nP=0.1810"];
+  "BackupGeneratorFailure" [label="Backup generator failure\nP=0.0875"];
+  "ColdStorageLoss" [label="Cold storage loss\nP=0.1322"];
+  "WaterContamination" [label="Water contamination\nP=0.0857"];
+  "EvacuationOrder" [label="Evacuation order\nP=0.0525"];
+  "SupplyShortage" [label="Supply shortage\nP=0.1659"];
+  "StaffShortage" [label="Staff shortage\nP=0.1043"];
+  "HospitalDowntime" [label="Hospital downtime\nP=0.1291"];
+  "EmergencyProcurement" [label="Emergency procurement\nP=0.2079"];
+  "PatientDiversion" [label="Patient diversion\nP=0.2078"];
+  "SevereStorm" -> "PowerOutage" [label="P(T|T)=0.65\nP(T|F)=0.08"];
+  "SevereStorm" -> "Flooding" [label="P(T|T)=0.40\nP(T|F)=0.03"];
+  "SevereStorm" -> "TransportDisruption" [label="P(T|T)=0.55\nP(T|F)=0.10"];
+  "PowerOutage" -> "BackupGeneratorFailure" [label="P(T|T)=0.30\nP(T|F)=0.04"];
+  "PowerOutage" -> "ColdStorageLoss" [label="P(T|T)=0.50\nP(T|F)=0.05"];
+  "Flooding" -> "WaterContamination" [label="P(T|T)=0.70\nP(T|F)=0.02"];
+  "Flooding" -> "EvacuationOrder" [label="P(T|T)=0.45\nP(T|F)=0.01"];
+  "TransportDisruption" -> "SupplyShortage" [label="P(T|T)=0.60\nP(T|F)=0.07"];
+  "TransportDisruption" -> "StaffShortage" [label="P(T|T)=0.35\nP(T|F)=0.05"];
+  "BackupGeneratorFailure" -> "HospitalDowntime" [label="P(T|T)=0.85\nP(T|F)=0.06"];
+  "SupplyShortage" -> "EmergencyProcurement" [label="P(T|T)=0.75\nP(T|F)=0.10"];
+  "HospitalDowntime" -> "PatientDiversion" [label="P(T|T)=0.80\nP(T|F)=0.12"];
+}
